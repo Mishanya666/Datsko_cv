@@ -48,7 +48,7 @@ kl = k ** l
 assert np.all(kl == np.array([1, 4, 27, 64, 625]))
 
 m = np.array([2, 2, 2, 3, 3, 3])
-mc = len(np.unique(m))/len(m)
+mc = m.std()
 
 assert mc == 0.5
 
