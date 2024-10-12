@@ -4,5 +4,5 @@
 # Navigation:
 ### 1. [Задание "основы numpy"](./numpy_task) 
 
-### 2. [Линейный градиент](./linear_gradient) 
+### 2. [Линейный градиент](./gradient) 
 
