@@ -1,9 +1,6 @@
 **Answer:**
-
 Stars:  90
-
 Pluses:  71
-
 Total ammount:  161
 
 
