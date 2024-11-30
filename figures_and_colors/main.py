@@ -34,7 +34,6 @@ for color in rounded_colors:
         count = sum(1 for c, s in zip(colors, shapes) if round(c, 1) == color and s == shape)
         count_by_color_shape[(color, shape)] = count
 
-print("Результаты анализа:")
 print(f"Общее количество фигур: {len(colors)}")
 print("\nКоличество фигур по оттенкам и типам:")
 
@@ -46,6 +45,4 @@ for color in sorted(rounded_colors):
     print(f"  Прямоугольники: {rect_count}")
 
 plt.imshow(im)
-
-plt.tight_layout()
 plt.show()
