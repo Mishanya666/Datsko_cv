@@ -10,4 +10,5 @@
 * Image 10: 2 pencils
 * Image 11: 3 pencils
 * Image 12: 1 pencils
+  
 Total pencils on all images: 21
