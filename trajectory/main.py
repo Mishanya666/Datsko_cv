@@ -1,49 +1,58 @@
+import cv2
 import numpy as np
+import os
 import matplotlib.pyplot as plt
-from skimage.measure import label, regionprops
-from os import listdir
-from os.path import isfile, join
+from collections import defaultdict
 
-data_path = "./motion/out/"
+directory = 'motion/out'
 
-def distance(a, b):
-    return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+images = []
 
-filenames = [f for f in listdir(data_path) if isfile(join(data_path, f))]
-filenames.sort()
+for i in range(100):
+    filename = f'h_{i}.npy'
+    file_path = os.path.join(directory, filename)
+    img = np.load(file_path).astype(np.uint8)
+    images.append(img)
 
-arr = np.load(join(data_path, filenames[0]))
-labeled = label(arr)
-regions = regionprops(labeled)
+trajectories = defaultdict(list)
 
-objects = []
-for region in regions:
-    cx, cy = region.centroid
-    objects.append([[cx, cy]])
 
-for file in filenames[1:]:
-    frame = np.load(join(data_path, file))
-    labeled = label(frame)
-    regions = regionprops(labeled)
+def find_closest_trajectory(x, y, existing_trajectories):
+    min_distance = float('inf')
+    closest_id = -1
 
-    # Матрица расстояний
-    ds = []
-    for j in range(len(regions)):
-        ds.append([distance(regions[j].centroid, obj[-1]) for obj in objects])
-    ds = np.array(ds)
+    for trajectory_id, points in existing_trajectories.items():
+        if not points:
+            continue
+        last_point = points[-1]
+        dist = np.sqrt((last_point[0] - x) ** 2 + (last_point[1] - y) ** 2)
 
-    for i in range(len(objects)):
-        nearest_idx = np.argmin(ds[:, i])
-        objects[i].append(regions[nearest_idx].centroid)
-        ds[nearest_idx, :] = np.inf
+        if dist < min_distance:
+            min_distance = dist
+            closest_id = trajectory_id
 
-obs = np.array(objects)
+    return closest_id
 
-for i, trajectory in enumerate(obs):
-    trajectory = np.array(trajectory)
-    plt.plot(trajectory[:, 0], trajectory[:, 1], label=f"{i+1}")
 
-plt.xlabel("X координаты")
-plt.ylabel("Y координаты")
-plt.legend()
+initial_image = images[0]
+cnts, _ = cv2.findContours(initial_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+for i, cnt in enumerate(cnts):
+    (x, y), _ = cv2.minEnclosingCircle(cnt)
+    trajectories[i].append((x, y))
+
+for img in images[1:]:
+    cnts, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for cnt in cnts:
+        (x, y), _ = cv2.minEnclosingCircle(cnt)
+
+        closest_id = find_closest_trajectory(x, y, trajectories)
+
+        trajectories[closest_id].append((x, y))
+
+for trajectory in trajectories.values():
+    trajectory_points = np.array(trajectory)
+    plt.scatter(trajectory_points[:, 0], trajectory_points[:, 1], s=30, label='Trajectory')
+
 plt.show()
