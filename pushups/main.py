@@ -50,27 +50,17 @@ writer = cv2.VideoWriter("out_pushups.mp4", cv2.VideoWriter_fourcc(*"avc1"), 10,
 
 while cap.isOpened():
     ret, frame = cap.read()
-    writer.write(frame)
-    curr_time = time.time()
-    last_time = curr_time
-
-    results = model(frame)
-
-    key = cv2.waitKey(1)
-    if key == ord("q"):
+    if not ret:
         break
 
-    if not results:
-        continue
-
+    results = model(frame)
     result = results[0]
+
     keypoints = result.keypoints.xy.tolist()
-    if not keypoints:
+    if not keypoints or not keypoints[0]:
         continue
 
     keypoints = keypoints[0]
-    if not keypoints:
-        continue
 
     annotator = Annotator(frame)
     annotator.kpts(result.keypoints.data[0], result.orig_shape, 5, True)
@@ -78,21 +68,25 @@ while cap.isOpened():
 
     angle_ = process(annotated, keypoints)
 
-    if flag and angle_ > 150:
-        count += 1
-        flag = False
-        last_time = time.time()
-    elif angle_ < 90:
-        flag = True
+    if angle_ is not None:
+        if flag and angle_ > 150:
+            count += 1
+            flag = False
+            last_time = time.time()
+        elif angle_ < 90:
+            flag = True
 
-    curr_time = time.time()
-    if curr_time - last_time > 15:
+    if time.time() - last_time > 15:
         count = 0
 
-    cv2.putText(annotated, f"Push-ups: {count}", (10, 20), cv2.FONT_HERSHEY_PLAIN,
-                1.5, (25, 255, 25), 1)
+    cv2.putText(annotated, f"Push-ups: {count}", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     cv2.imshow("Push-up Counter", annotated)
+    writer.write(annotated)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 writer.release()
 cap.release()
